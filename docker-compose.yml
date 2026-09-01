@@ -1,0 +1,20 @@
+services:
+
+  # ── Face Recognition API (Python/Flask) ───────────────────────────────────
+  face-api:
+    build:
+      context: ./face-api
+      dockerfile: Dockerfile
+    container_name: evote_face_api
+    restart: unless-stopped
+    ports:
+      - "5055:5055"
+    volumes:
+      - ./face-api/storage:/app/storage
+    environment:
+      FLASK_ENV: production
+      FLASK_PORT: 5055
+      API_SECRET_KEY: evote_face_secret_2024
+      FACE_MODEL: Facenet512
+      DETECTOR_BACKEND: mtcnn
+      FACE_DISTANCE_THRESHOLD: "0.40"

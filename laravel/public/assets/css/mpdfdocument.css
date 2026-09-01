@@ -1,0 +1,55 @@
+body { font-family: 'Arial', sans-serif !important; font-size: 9pt; }
+p { 	text-align: justify; margin-bottom: 4pt; margin-top:0pt;  font-size: 10pt;}
+table{
+    font-size: 10pt;
+}
+.table{
+    border: 1px solid #000;
+    border-collapse: collapse;
+}
+
+.table tr td,.table tr th{
+    border: 1px solid #000;
+    padding: 5px;
+}
+
+.bold{
+    font-weight: bold;
+}
+.center{
+    text-align: center;
+}
+.right{
+    text-align: right;
+}
+
+hr.s4 {
+    height:5px;
+    border-top:2px solid black;
+    border-bottom:9px solid black;
+}
+
+.underline{
+    text-decoration: underline;
+}
+
+.font-light{
+    font-weight: 500;
+}
+
+.mt-mb-0{
+    margin-top: 0px;margin-bottom: 0px;
+}
+
+.tab4 {
+    tab-size: 8;
+}
+
+.table-identitas tr td{
+    vertical-align: top;
+    padding: 5px;
+}
+
+.w-100{
+    width: 100%;;
+}

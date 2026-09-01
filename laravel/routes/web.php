@@ -1,0 +1,396 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\u\HomeController;
+use App\Http\Controllers\u\LoginController;
+use App\Http\Controllers\u\VerificationController;
+use App\Http\Controllers\u\AccountController;
+use App\Http\Controllers\u\PesanController;
+use App\Http\Controllers\u\InformasiController;
+
+use App\Http\Controllers\a\AdminLoginController;
+use App\Http\Controllers\a\AdminController;
+use App\Http\Controllers\a\UsersController;
+use App\Http\Controllers\a\KelompokTimController;
+use App\Http\Controllers\a\PermissionsController;
+use App\Http\Controllers\a\RoleController;
+use App\Http\Controllers\a\TimController;
+use App\Http\Controllers\a\InviteTimController;
+use App\Http\Controllers\a\PendukungController;
+use App\Http\Controllers\a\KandidatController;
+use App\Http\Controllers\a\PemilihController;
+use App\Http\Controllers\a\KabupatenController;
+use App\Http\Controllers\a\KecamatanController;
+use App\Http\Controllers\a\KelurahanController;
+use App\Http\Controllers\a\TabulasiPendukungController;
+use App\Http\Controllers\a\TabulasiTimController;
+
+use App\Http\Controllers\a\ProfilesUpdateController;
+use App\Http\Controllers\a\SliderUpdateController;
+use App\Http\Controllers\a\KategoriBarangUpdateController;
+
+use App\Http\Controllers\a\KontakUpdateController;
+use App\Http\Controllers\a\AccountUpdateController;
+use App\Http\Controllers\a\SettingController;
+use App\Http\Controllers\a\FaceVerifyLogController;
+
+use App\Http\Controllers\m\DataController;
+use App\Http\Controllers\m\ChartController;
+
+
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+Route::group(['middleware' => ['headersetcustom','xssprotect']], function () {
+
+// Route::get('/close-page', [LoginController::class, 'close_page'])->name('close_page');
+
+// Route::get('/', [LoginController::class, 'close_page'])->name('home');
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/home', [HomeController::class, 'index'])->name('home-view');
+Route::get('/home/kandidat/{any}', [HomeController::class, 'kandidat_detail'])->name('home.kandidat_detail');
+ Route::get('/login', [LoginController::class, 'index'])->name('login');
+//Route::get('/login', [LoginController::class, 'close_page'])->name('login');
+
+Route::get('/admin-login', [AdminLoginController::class, 'index'])->name('admin_login');
+Route::get('/admin-login/reload-captcha', [AdminLoginController::class, 'reload_captcha'])->name('login.reload_captcha');
+Route::get('/panlih', [AdminLoginController::class, 'index'])->name('admin_login');
+Route::get('/registrasi', [LoginController::class, 'registrasi'])->name('registrasi');
+// Route::get('/registrasi', [LoginController::class, 'close_page'])->name('registrasi');
+Route::get('/aktivasi-akun', [LoginController::class, 'aktivasi_akun'])->name('aktivasi_akun')->middleware('logactivity:aktivasi_akun');
+Route::get('/verifikasi-login', [LoginController::class, 'verifikasi_login'])->name('verifikasi_login')->middleware('logactivity:verifikasi_login');
+
+Route::get('/registrasi/respone', [LoginController::class, 'respone'])->name('registrasi.respone');
+Route::post('/registrasi/store', [LoginController::class, 'registrasi_store'])->name('registrasi.store')->middleware(['logactivity:store']);
+Route::get('/registrasi/aktivasi/{any}', [LoginController::class, 'aktivasi'])->name('registrasi.aktivasi');
+Route::get('/login/lupa-akun', [LoginController::class, 'lupa_akun'])->name('login.lupa_akun');
+Route::post('/login/kirim-link', [LoginController::class, 'kirim_link'])->name('login.kirim_link');
+Route::post('/login/update-akun', [LoginController::class, 'update_akun'])->name('login.update_akun');
+Route::get('/login/form-update-akun', [LoginController::class, 'form_update_akun'])->name('login.form_update_akun');
+
+Route::post('/login/authenticate', [LoginController::class, 'authenticate'])->name('login.authenticate')->middleware('cloudflarecaptcha')->withoutMiddleware(['xssprotect']);
+Route::get('/verifikasi-wajah-login', [LoginController::class, 'verifikasi_wajah_login_page'])->name('login.verifikasi_wajah');
+Route::post('/verifikasi-wajah-login', [LoginController::class, 'verifikasi_wajah_login_proses'])->name('login.verifikasi_wajah_proses');
+Route::post('/login/verifikasi-otp', [LoginController::class, 'verifikasi_otp'])->name('login.verifikasi_otp');
+Route::post('/login/kirim-ulang-otp', [LoginController::class, 'kirimUlangOtp'])->name('login.kirim_ulang_otp');
+Route::get('/logout', [LoginController::class, 'logout'])->name('login.logout');
+
+Route::post('/admin_login/authenticate', [AdminLoginController::class, 'authenticate'])->name('admin_login.authenticate')->middleware('logactivity:login')->withoutMiddleware(['xssprotect']);
+Route::get('/admin_logout', [AdminLoginController::class, 'logout'])->name('admin_login.logout')->middleware('logactivity:logout');
+
+Route::get('/data-kelurahan', [DataController::class, 'data_kelurahan'])->name('data.data_kelurahan');
+
+Route::get('/data-bar-chart-calon-kandidat-2', [ChartController::class, 'bar_chart_calon_kandidat_2'])->name('chart.bar_chart_calon_kandidat_2');
+Route::get('/search-kandidat', [AccountController::class, 'search_kandidat'])->name('account.search_kandidat')->middleware('logactivity:search_kandidat');
+     
+
+//AUTH
+    Route::group(['middleware' => 'multiuser'], function () {
+
+        //Data
+        Route::get('/search-kabupaten', [DataController::class, 'search_kabupaten'])->name('data.search_kabupaten');
+        Route::get('/search-kecamatan', [DataController::class, 'search_kecamatan'])->name('data.search_kecamatan');
+        Route::get('/search-kelurahan', [DataController::class, 'search_kelurahan'])->name('data.search_kelurahan');
+        Route::get('/search-tim', [DataController::class, 'search_tim'])->name('data.search_tim');
+        Route::get('/search-referensi', [DataController::class, 'search_referensi'])->name('data.search_referensi');
+        Route::get('/search-referensi-all', [DataController::class, 'search_referensi_all'])->name('data.search_referensi_all');
+        //End Data
+        
+        Route::get('/pemilih/detail/{any}', [PemilihController::class, 'detail'])->name('pemilih.detail')->middleware('logactivity:detail');
+        Route::get('/pemilih-vote/detail/{any}', [PemilihController::class, 'vote_detail'])->name('pemilih.vote_detail')->middleware('logactivity:vote_detail');
+        Route::post('/pemilih/update-verifikasi', [PemilihController::class, 'update_verifikasi'])->name('pemilih.update_verifikasi')->middleware('logactivity:update_verifikasi');
+     
+
+
+    });
+   
+    Route::group(['middleware' => ['check.user.login:a,user','role:a|p|kp|su|v']], function () {
+  
+
+        //Permissions
+        Route::get('/permissions', [PermissionsController::class, 'index'])->name('permissions.main')->middleware('logactivity:list');
+        Route::get('/getPermissions', [PermissionsController::class, 'get_permissions'])->name('permissions.get_permissions');
+        Route::get('/permissions/create', [PermissionsController::class, 'create'])->name('permissions.create')->middleware('logactivity:create');
+        Route::get('/permissions/edit/{any}', [PermissionsController::class, 'edit'])->name('permissions.edit')->middleware('logactivity:edit');
+        Route::post('/permissions/store', [PermissionsController::class, 'store'])->name('permissions.store')->middleware('logactivity:store');
+        Route::post('/permissions/update', [PermissionsController::class, 'update'])->name('permissions.update')->middleware('logactivity:update');
+        Route::post('/permissions/destroy', [PermissionsController::class, 'destroy'])->name('permissions.destroy')->middleware('logactivity:delete');
+        Route::get('/permissions/get-data', [PermissionsController::class, 'get_data'])->name('permissions.get_data');
+        //End Permissions
+
+        //Role
+        Route::get('/role', [RoleController::class, 'index'])->name('role.main')->middleware('logactivity:list');
+        Route::get('/getRole', [RoleController::class, 'get_role'])->name('role.get_role');
+        Route::get('/role/create', [RoleController::class, 'create'])->name('role.create')->middleware('logactivity:create');
+        Route::get('/role/permission/{any}', [RoleController::class, 'permission'])->name('role.permission')->middleware('logactivity:permission');
+        Route::put('/roles/{roleId}/give-permissions', [RoleController::class, 'givePermissionToRole']);
+        Route::post('/role/store', [RoleController::class, 'store'])->name('role.store')->middleware('logactivity:store');
+        Route::post('/role/update', [RoleController::class, 'update'])->name('role.update')->middleware('logactivity:update');
+        Route::post('/role/destroy', [RoleController::class, 'destroy'])->name('role.destroy')->middleware('logactivity:delete');
+        Route::get('/role/get-data', [RoleController::class, 'get_data'])->name('role.get_data');
+        //End Role
+
+        
+
+       //Users
+       Route::get('/users', [UsersController::class, 'index'])->name('users.main')->middleware('logactivity:list');
+       Route::get('/getUsers', [UsersController::class, 'get_users'])->name('users.get_users');
+       Route::get('/users/create', [UsersController::class, 'create'])->name('users.create')->middleware('logactivity:create');
+       Route::get('/users/edit/{any}', [UsersController::class, 'edit'])->name('users.edit')->middleware('logactivity:edit');
+       Route::get('/users/get_account', [UsersController::class, 'get_account'])->name('users.get_account');
+       Route::post('/users/store', [UsersController::class, 'store'])->name('users.store')->middleware('logactivity:store')->withoutMiddleware(['xssprotect']);
+       Route::post('/users/update', [UsersController::class, 'update'])->name('users.update')->middleware('logactivity:update')->withoutMiddleware(['xssprotect']);
+       Route::post('/users/update_account', [UsersController::class, 'update_account'])->name('users.update_account')->middleware('logactivity:update_account')->withoutMiddleware(['xssprotect']);
+       Route::post('/users/destroy', [UsersController::class, 'destroy'])->name('users.destroy')->middleware('logactivity:delete');
+       Route::post('/users/update-theme', [UsersController::class, 'update_theme'])->name('users.update_theme')->middleware('logactivity:update_theme');
+       //End Users
+
+       Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+       Route::post('/line-chart', [AdminController::class, 'line_chart'])->name('dashboard.line_chart');
+       Route::post('/pie-chart', [AdminController::class, 'pie_chart'])->name('dashboard.pie_chart');
+   
+       Route::get('/setting', [SettingController::class, 'index'])->name('setting.main');
+       Route::post('/setting/update', [SettingController::class, 'update'])->name('setting.update');
+   
+        //Pemilih
+        Route::get('/pemilih', [PemilihController::class, 'index'])->name('pemilih.main')->middleware('logactivity:list');
+        Route::post('/get-pemilih', [PemilihController::class, 'get_pemilih'])->name('pemilih.get_pemilih');
+        Route::post('/get-registration-list', [PemilihController::class, 'get_registration_list'])->name('pemilih.get_registration_list');
+        Route::get('/pemilih/registration-list', [PemilihController::class, 'registration_list'])->name('pemilih.registration_list')->middleware('logactivity:list');
+        Route::get('/pemilih/create', [PemilihController::class, 'create'])->name('pemilih.create')->middleware('logactivity:create');
+        Route::get('/pemilih/edit/{any}', [PemilihController::class, 'edit'])->name('pemilih.edit')->middleware('logactivity:edit');
+        Route::get('/pemilih/get_account', [PemilihController::class, 'get_account'])->name('pemilih.get_account');
+        Route::post('/pemilih/store', [PemilihController::class, 'store'])->name('pemilih.store')->middleware('logactivity:store');
+        Route::post('/pemilih/update', [PemilihController::class, 'update'])->name('pemilih.update')->middleware('logactivity:update');
+        Route::post('/pemilih/update_account', [PemilihController::class, 'update_account'])->name('pemilih.update_account')->middleware('logactivity:update_account');
+        Route::post('/pemilih/destroy', [PemilihController::class, 'destroy'])->name('pemilih.destroy')->middleware('logactivity:delete');
+        Route::post('/pemilih/update-theme', [PemilihController::class, 'update_theme'])->name('pemilih.update_theme')->middleware('logactivity:update_theme');
+        Route::post('/pemilih/send-new-auth', [PemilihController::class, 'send_new_auth'])->name('pemilih.send_new_auth')->middleware('logactivity:send_new_auth');
+        Route::get('/pemilih/vote-list', [PemilihController::class, 'vote_list'])->name('pemilih.vote_list')->middleware('logactivity:vote_list');
+        Route::post('/get-vote-list', [PemilihController::class, 'get_vote_list'])->name('pemilih.get_vote_list');
+        Route::get('/pemilih/vote-list-notifikasi', [PemilihController::class, 'vote_list_notifikasi'])->name('pemilih.vote_list_notifikasi')->middleware('logactivity:vote_list_notifikasi');
+        Route::post('/get-vote-list-notifikasi', [PemilihController::class, 'get_vote_list_notifikasi'])->name('pemilih.get_vote_list_notifikasi');
+        Route::post('/pemilih/vote-approve', [PemilihController::class, 'vote_approve'])->name('pemilih.vote_approve')->middleware('logactivity:vote_approve');
+        //End Pemilih
+
+        //Face Verify Log
+        Route::get('/face-verify-log', [FaceVerifyLogController::class, 'index'])->name('face_log.main');
+        Route::get('/face-verify-log/get-data', [FaceVerifyLogController::class, 'get_data'])->name('face_log.get_data');
+        Route::get('/face-verify-log/stats', [FaceVerifyLogController::class, 'stats'])->name('face_log.stats');
+        Route::get('/face-verify-log/export-csv', [FaceVerifyLogController::class, 'export_csv'])->name('face_log.export_csv');
+        //End Face Verify Log
+
+        Route::get('/panlih/registration-list', [PemilihController::class, 'registration_list'])->name('panlih.registration_list')->middleware('logactivity:list');
+        Route::post('/panlih/get-registration-list', [PemilihController::class, 'get_registration_list'])->name('panlih.get_registration_list');  
+     
+         //Kabupaten
+         Route::get('/admin/kabupaten', [KabupatenController::class, 'index'])->name('admin.kabupaten.main')->middleware('logactivity:list');
+         Route::get('/admin/getkabupaten', [KabupatenController::class, 'get_kabupaten'])->name('admin.kabupaten.get_kabupaten');
+         Route::get('/admin/kabupaten/create', [KabupatenController::class, 'create'])->name('admin.kabupaten.create')->middleware('logactivity:create');
+         Route::get('/admin/kabupaten/edit/{any}', [KabupatenController::class, 'edit'])->name('admin.kabupaten.edit')->middleware('logactivity:edit');
+         Route::post('/admin/kabupaten/store', [KabupatenController::class, 'store'])->name('admin.kabupaten.store')->middleware('logactivity:store');
+         Route::post('/admin/kabupaten/update', [KabupatenController::class, 'update'])->name('admin.kabupaten.update')->middleware('logactivity:update');
+         Route::post('/admin/kabupaten/destroy', [KabupatenController::class, 'destroy'])->name('admin.kabupaten.destroy')->middleware('logactivity:delete');
+         Route::get('/admin/kabupaten/get_data', [KabupatenController::class, 'get_data'])->name('admin.kabupaten.get_data');
+         //End Kabupaten
+
+         //Kecamatan
+         Route::get('/admin/kecamatan', [KecamatanController::class, 'index'])->name('admin.kecamatan.main')->middleware('logactivity:list');
+         Route::get('/admin/getkecamatan', [KecamatanController::class, 'get_kecamatan'])->name('admin.kecamatan.get_kecamatan');
+         Route::get('/admin/kecamatan/create', [KecamatanController::class, 'create'])->name('admin.kecamatan.create')->middleware('logactivity:create');
+         Route::get('/admin/kecamatan/edit/{any}', [KecamatanController::class, 'edit'])->name('admin.kecamatan.edit')->middleware('logactivity:edit');
+         Route::post('/admin/kecamatan/store', [KecamatanController::class, 'store'])->name('admin.kecamatan.store')->middleware('logactivity:store');
+         Route::post('/admin/kecamatan/update', [KecamatanController::class, 'update'])->name('admin.kecamatan.update')->middleware('logactivity:update');
+         Route::post('/admin/kecamatan/destroy', [KecamatanController::class, 'destroy'])->name('admin.kecamatan.destroy')->middleware('logactivity:delete');
+         Route::get('/admin/kecamatan/get_data', [KecamatanController::class, 'get_data'])->name('admin.kecamatan.get_data');
+         //End Kecamatan
+
+         //Kelurahan
+         Route::get('/admin/kelurahan', [KelurahanController::class, 'index'])->name('admin.kelurahan.main')->middleware('logactivity:list');
+         Route::get('/admin/getkelurahan', [KelurahanController::class, 'get_kelurahan'])->name('admin.kelurahan.get_kelurahan');
+         Route::get('/admin/kelurahan/create', [KelurahanController::class, 'create'])->name('admin.kelurahan.create')->middleware('logactivity:create');
+         Route::get('/admin/kelurahan/edit/{any}', [KelurahanController::class, 'edit'])->name('admin.kelurahan.edit')->middleware('logactivity:edit');
+         Route::post('/admin/kelurahan/store', [KelurahanController::class, 'store'])->name('admin.kelurahan.store')->middleware('logactivity:store');
+         Route::post('/admin/kelurahan/update', [KelurahanController::class, 'update'])->name('admin.kelurahan.update')->middleware('logactivity:update');
+         Route::post('/admin/kelurahan/destroy', [KelurahanController::class, 'destroy'])->name('admin.kelurahan.destroy')->middleware('logactivity:delete');
+         Route::get('/admin/kelurahan/get_data', [KelurahanController::class, 'get_data'])->name('admin.kelurahan.get_data');
+         //End Kelurahan
+      
+       
+    //    //Tim
+    //    Route::get('/tim/{any}', [TimController::class, 'index'])->name('tim.main')->middleware('logactivity:list');
+    //    Route::get('/get-tim', [TimController::class, 'get_tim'])->name('tim.get_tim');
+    //    Route::get('/tim-get-data', [TimController::class, 'get_data'])->name('tim.get_data');
+    //    Route::get('/tim/edit/{any}', [TimController::class, 'edit'])->name('tim.edit')->middleware('logactivity:edit');
+    //    Route::post('/tim/store', [TimController::class, 'store'])->name('tim.store')->middleware('logactivity:store');
+    //    Route::post('/tim/update', [TimController::class, 'update'])->name('tim.update')->middleware('logactivity:update');
+    //    Route::post('/tim/destroy', [TimController::class, 'destroy'])->name('tim.destroy')->middleware('logactivity:delete');
+       
+    //    //End Tim
+   
+   
+    //    //InviteTim
+    //    Route::get('/invite-tim', [InviteTimController::class, 'index'])->name('invite_tim.main')->middleware('logactivity:list');
+    //    Route::get('/get-invite-tim', [InviteTimController::class, 'get_invite_tim'])->name('invite_tim.get_invite_tim');
+    //    Route::get('/invite-tim/create', [InviteTimController::class, 'create'])->name('invite_tim.create')->middleware('logactivity:create');
+    //    Route::get('/invite-tim/edit/{any}', [InviteTimController::class, 'edit'])->name('invite_tim.edit')->middleware('logactivity:edit');
+    //    Route::post('/invite-tim/store', [InviteTimController::class, 'store'])->name('invite_tim.store')->middleware('logactivity:store');
+    //    Route::post('/invite-tim/update', [InviteTimController::class, 'update'])->name('invite_tim.update')->middleware('logactivity:update');
+    //    Route::post('/invite-tim/destroy', [InviteTimController::class, 'destroy'])->name('invite_tim.destroy')->middleware('logactivity:delete');
+    //    //End InviteTim
+       
+    //    //Pendukung
+    //    Route::get('/invite-pendukung', [PendukungController::class, 'invite_pendukung'])->name('pendukung.invite_pendukung')->middleware('logactivity:invite_pendukung');
+    //    Route::get('/search-pendukung', [PendukungController::class, 'search_pendukung'])->name('pendukung.search_pendukung')->middleware('logactivity:search_pendukung');
+    //    Route::post('/invite-pendukung-update', [PendukungController::class, 'invite_pendukung_update'])->name('pendukung.invite_pendukung_update')->middleware('logactivity:invite_pendukung_update');
+    //    Route::get('/get-detail-pendukung', [PendukungController::class, 'get_detail_pendukung'])->name('pendukung.get_detail_pendukung')->middleware('logactivity:get_detail_pendukung');
+    //    Route::get('/pendukung', [PendukungController::class, 'index'])->name('pendukung.main')->middleware('logactivity:list');
+    //    Route::post('/get-pendukung', [PendukungController::class, 'get_pendukung'])->name('pendukung.get_pendukung');
+    //    Route::get('/pendukung/create', [PendukungController::class, 'create'])->name('pendukung.create')->middleware('logactivity:create');
+    //    Route::get('/pendukung/edit/{any}', [PendukungController::class, 'edit'])->name('pendukung.edit')->middleware('logactivity:edit');
+    //    Route::post('/pendukung/store', [PendukungController::class, 'store'])->name('pendukung.store')->middleware('logactivity:store');
+    //    Route::post('/pendukung/update', [PendukungController::class, 'update'])->name('pendukung.update')->middleware('logactivity:update');
+    //    Route::post('/pendukung/destroy', [PendukungController::class, 'destroy'])->name('pendukung.destroy')->middleware('logactivity:delete');
+    //    //End Pendukung
+        
+    //     //TabulasiPendukung
+    //     Route::get('/tabulasi/kabupaten', [TabulasiPendukungController::class, 'kabupaten'])->name('tabulasi.kabupaten.main')->middleware('logactivity:tabulasi_kabupaten');
+    //     Route::get('/tabulasi/kecamatan', [TabulasiPendukungController::class, 'kecamatan'])->name('tabulasi.kecamatan.main')->middleware('logactivity:tabulasi_kecamatan');
+    //     Route::post('/tabulasi/kecamatan-bar-chart', [TabulasiPendukungController::class, 'kecamatan_bar_chart'])->name('tabulasi.kecamatan.bar_chart')->middleware('logactivity:tabulasi_kecamatan_bar_chart');
+    //     Route::get('/tabulasi/kelurahan', [TabulasiPendukungController::class, 'kelurahan'])->name('tabulasi.kelurahan.main')->middleware('logactivity:tabulasi_kelurahan');
+    //     Route::get('/tabulasi/tps', [TabulasiPendukungController::class, 'tps'])->name('tabulasi.tps.main')->middleware('logactivity:tabulasi_tps');
+    //     Route::post('/tabulasi/kelurahan-bar-chart', [TabulasiPendukungController::class, 'kelurahan_bar_chart'])->name('tabulasi.kelurahan.bar_chart')->middleware('logactivity:tabulasi_kelurahan_bar_chart');
+    //     //End TabulasiPendukung
+        
+    //     //TabulasiTim
+    //     Route::get('/tabulasi/tim/{any}', [TabulasiTimController::class, 'tim'])->name('tabulasi.tim.main')->middleware('logactivity:tabulasi_tim');
+    //     Route::post('/tabulasi/tim-bar-chart', [TabulasiTimController::class, 'tim_bar_chart'])->name('tabulasi.tim.bar_chart')->middleware('logactivity:tabulasi_tim_bar_chart');
+    //     Route::post('/tabulasi/tim-line-chart', [TabulasiTimController::class, 'tim_line_chart'])->name('tabulasi.tim.line_chart')->middleware('logactivity:tabulasi_tim_line_chart');
+    //     Route::get('/tabulasi/tim-detail', [TabulasiTimController::class, 'detail'])->name('tabulasi.tim.detail')->middleware('logactivity:tabulasi_tim_detail');
+    //     Route::post('/tabulasi/tim-detail-bar-chart', [TabulasiTimController::class, 'detail_bar_chart'])->name('tabulasi.tim.detail_bar_chart')->middleware('logactivity:tabulasi_tim_detail_bar_chart');
+        
+    //     //End TabulasiTim
+   
+   
+   
+   
+    //    //AccountUpdate
+    //    Route::get('/accountupdate', [AccountUpdateController::class, 'index'])->name('accountupdate.main')->middleware('logactivity:list');
+    //    Route::get('/getAccountUpdate', [AccountUpdateController::class, 'get_accountupdate'])->name('accountupdate.get_accountupdate');
+    //    Route::get('/accountupdate/create', [AccountUpdateController::class, 'create'])->name('accountupdate.create')->middleware('logactivity:create');
+    //    Route::get('/accountupdate/edit/{any}', [AccountUpdateController::class, 'edit'])->name('accountupdate.edit')->middleware('logactivity:edit');
+    //    Route::get('/accountupdate/get_account', [AccountUpdateController::class, 'get_account'])->name('accountupdate.get_account');
+    //    Route::post('/accountupdate/update', [AccountUpdateController::class, 'update'])->name('accountupdate.update')->middleware('logactivity:update');
+    //    Route::post('/accountupdate/update_account', [AccountUpdateController::class, 'update_account'])->name('accountupdate.update_account');
+    //    //End AccountUpdate
+   
+       
+   
+    //    //Profiles
+    //    Route::get('/profilesupdate', [ProfilesUpdateController::class, 'index'])->name('profilesupdate');
+    //    Route::get('/getprofilesupdate', [ProfilesUpdateController::class, 'get_profiles_update'])->name('profilesupdate.get_profiles_update');
+    //    Route::post('/profilesupdate/update', [ProfilesUpdateController::class, 'update'])->name('profilesupdate.update')->middleware('logactivity:update');
+    //    //End Profiles
+   
+    //     //Slider
+    //     Route::get('/slider', [SliderUpdateController::class, 'index'])->name('slider.main')->middleware('logactivity:list');
+    //     Route::get('/getslider', [SliderUpdateController::class, 'get_slider'])->name('slider.get_slider');
+    //     Route::get('/slider/create', [SliderUpdateController::class, 'create'])->name('slider.create')->middleware('logactivity:create');
+    //     Route::get('/slider/edit/{any}', [SliderUpdateController::class, 'edit'])->name('slider.edit')->middleware('logactivity:edit');
+    //     Route::post('/slider/store', [SliderUpdateController::class, 'store'])->name('slider.store')->middleware('logactivity:store');
+    //     Route::post('/slider/update', [SliderUpdateController::class, 'update'])->name('slider.update')->middleware('logactivity:update');
+    //     Route::post('/slider/destroy', [SliderUpdateController::class, 'destroy'])->name('slider.destroy')->middleware('logactivity:delete');
+    //     Route::get('/slider/get_data', [SliderUpdateController::class, 'get_data'])->name('slider.get_data');
+    //     //End Slider
+   
+    //     //KategoriBarang
+    //     Route::get('/kategoribarangupdate', [KategoriBarangUpdateController::class, 'index'])->name('kategoribarangupdate.main')->middleware('logactivity:list');
+    //     Route::get('/getkategoribarangupdate', [KategoriBarangUpdateController::class, 'get_kategoribarangupdate'])->name('kategoribarangupdate.get_kategoribarangupdate');
+    //     Route::get('/kategoribarangupdate/create', [KategoriBarangUpdateController::class, 'create'])->name('kategoribarangupdate.create')->middleware('logactivity:create');
+    //     Route::get('/kategoribarangupdate/edit/{any}', [KategoriBarangUpdateController::class, 'edit'])->name('kategoribarangupdate.edit')->middleware('logactivity:edit');
+    //     Route::post('/kategoribarangupdate/store', [KategoriBarangUpdateController::class, 'store'])->name('kategoribarangupdate.store')->middleware('logactivity:store');
+    //     Route::post('/kategoribarangupdate/update', [KategoriBarangUpdateController::class, 'update'])->name('kategoribarangupdate.update')->middleware('logactivity:update');
+    //     Route::post('/kategoribarangupdate/destroy', [KategoriBarangUpdateController::class, 'destroy'])->name('kategoribarangupdate.destroy')->middleware('logactivity:delete');
+    //     Route::get('/kategoribarangupdate/get_data', [KategoriBarangUpdateController::class, 'get_data'])->name('kategoribarangupdate.get_data');
+    //     //End KategoriBarang
+        
+     
+   
+   
+    //      //Kontak
+    //    Route::get('/kontakupdate', [KontakUpdateController::class, 'index'])->name('kontakupdate.main')->middleware('logactivity:list');
+    //    Route::get('/getkontakupdate', [KontakUpdateController::class, 'get_kontakupdate'])->name('kontakupdate.get_kontakupdate');
+    //    Route::get('/kontakupdate/create', [KontakUpdateController::class, 'create'])->name('kontakupdate.create')->middleware('logactivity:create');
+    //    Route::get('/kontakupdate/edit/{any}', [KontakUpdateController::class, 'edit'])->name('kontakupdate.edit')->middleware('logactivity:edit');
+    //    Route::post('/kontakupdate/store', [KontakUpdateController::class, 'store'])->name('kontakupdate.store')->middleware('logactivity:store');
+    //    Route::post('/kontakupdate/update', [KontakUpdateController::class, 'update'])->name('kontakupdate.update')->middleware('logactivity:update');
+    //    Route::post('/kontakupdate/destroy', [KontakUpdateController::class, 'destroy'])->name('kontakupdate.destroy')->middleware('logactivity:delete');
+        //End Kontak
+   
+       // Laporan
+   
+      
+       
+   
+       // End Laporan
+
+         //Kandidat
+         Route::get('/calon-kandidat', [KandidatController::class, 'calon_kandidat'])->name('kandidat.calon_kandidat')->middleware('logactivity:calon_kandidat');
+         Route::post('/get-calon-kandidat', [KandidatController::class, 'get_calon_kandidat'])->name('kandidat.get_calon_kandidat')->middleware('logactivity:get_calon_kandidat');
+         Route::get('/calon-kandidat-2', [KandidatController::class, 'calon_kandidat_2'])->name('kandidat.calon_kandidat_2')->middleware('logactivity:calon_kandidat_2');
+         Route::post('/get-calon-kandidat-2', [KandidatController::class, 'get_calon_kandidat_2'])->name('kandidat.get_calon_kandidat_2')->middleware('logactivity:get_calon_kandidat_2');
+         Route::get('/hasil-kandidat', [KandidatController::class, 'hasil_kandidat'])->name('kandidat.hasil_kandidat')->middleware('logactivity:hasil_kandidat');
+         Route::post('/get-hasil-kandidat', [KandidatController::class, 'get_hasil_kandidat'])->name('kandidat.get_hasil_kandidat')->middleware('logactivity:get_hasil_kandidat');
+         Route::get('/data-bar-chart-hasil-kandidat', [ChartController::class, 'bar_chart_hasil_kandidat'])->name('chart.bar_chart_hasil_kandidat');
+         Route::post('/destroy-calon-kandidat-2', [KandidatController::class, 'destroy_calon_kandidat_2'])->name('kandidat.destroy_calon_kandidat_2')->middleware('logactivity:get_calon_kandidat_2');
+         Route::get('/kandidat', [KandidatController::class, 'index'])->name('kandidat.main')->middleware('logactivity:list');
+        Route::post('/get-kandidat', [KandidatController::class, 'get_kandidat'])->name('kandidat.get_kandidat');
+        Route::get('/kandidat/create', [KandidatController::class, 'create'])->name('kandidat.create')->middleware('logactivity:create');
+        Route::get('/kandidat/edit/{any}', [KandidatController::class, 'edit'])->name('kandidat.edit')->middleware('logactivity:edit');
+        Route::post('/kandidat/store', [KandidatController::class, 'store'])->name('kandidat.store')->middleware('logactivity:store')->withoutMiddleware(['xssprotect']);;
+        Route::post('/kandidat/update', [KandidatController::class, 'update'])->name('kandidat.update')->middleware('logactivity:update')->withoutMiddleware(['xssprotect']);;
+        Route::post('/kandidat/destroy', [KandidatController::class, 'destroy'])->name('kandidat.destroy')->middleware('logactivity:delete');
+        
+         //Kandidat
+       
+    });
+
+
+
+
+    Route::get('/email/verify', [LoginController::class, 'show'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [LoginController::class, 'verify_email'])->name('verification.verify');
+    Route::post('/email/resend', [LoginController::class, 'resend'])->name('verification.resend');
+ 
+
+    // New
+    Route::group(['middleware' => ['check.user.login:dpt,pemilih']], function () {
+        // Route::get('account/{any}', [AccountController::class, 'index'])->name('account')->middleware('logactivity:home');;
+        Route::get('account/{any}', [AccountController::class, 'pilih_calon_kandidat_3'])->name('account')->middleware('logactivity:halaman_pilih_calon_kandidat_3');
+        
+        Route::get('/pilih-calon-kandidat', [AccountController::class, 'pilih_calon_kandidat'])->name('account.pilih_calon_kandidat')->middleware('logactivity:halaman_pilih_calon_kandidat');
+        // Route::get('/pilih-calon-kandidat-2', [AccountController::class, 'pilih_calon_kandidat_2'])->name('account.pilih_calon_kandidat_2')->middleware('logactivity:halaman_pilih_calon_kandidat_2');
+        // Route::get('/pilih-calon-kandidat-3', [AccountController::class, 'pilih_calon_kandidat_3'])->name('account.pilih_calon_kandidat_3')->middleware('logactivity:halaman_pilih_calon_kandidat_3');
+        Route::get('/pilih-calon-kandidat-3/detail/{any}', [AccountController::class, 'pilih_calon_kandidat_3_detail'])->name('account.pilih_calon_kandidat_3_detail')->middleware('logactivity:halaman_pilih_calon_kandidat_3_detail');
+        Route::post('/pilih-kandidat-update', [AccountController::class, 'pilih_kandidat_update'])->name('account.pilih_kandidat_update')->middleware(['logactivity:pilih_kandidat_update']);
+        Route::post('/pilih-kandidat-2-update', [AccountController::class, 'pilih_kandidat_2_update'])->name('account.pilih_kandidat_2_update')->middleware(['logactivity:pilih_kandidat_2_update']);
+        Route::post('/pilih-kandidat-3-update', [AccountController::class, 'pilih_kandidat_3_update'])->name('account.pilih_kandidat_3_update')->middleware(['logactivity:pilih_kandidat_3_update']);
+        Route::get('/get-detail-kandidat', [AccountController::class, 'get_detail_kandidat'])->name('account.get_detail_kandidat')->middleware('logactivity:get_detail_kandidat');
+        Route::get('/review-kandidat', [AccountController::class, 'review_kandidat'])->name('account.review_kandidat')->middleware('logactivity:review_kandidat');
+        
+        Route::get('/accountview', [AccountController::class, 'view'])->name('account.view')->middleware('logactivity:view_account');
+        Route::post('/account/update', [AccountController::class, 'update'])->name('account.update')->middleware('logactivity:update');
+    });
+    // End New
+});
