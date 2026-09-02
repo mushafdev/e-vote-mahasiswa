@@ -35,9 +35,10 @@ class FaceRecognitionService
             } else {
                 $payload['images_base64'] = [$imagesBase64];
             }
-            // Registrasi memproses beberapa foto (anti-spoof + embedding) secara
-            // berurutan dengan MTCNN, jadi beri timeout lebih longgar (60s).
-            $response = $this->client(60)->post("{$this->baseUrl}/api/face/register", $payload);
+            // Registrasi memproses beberapa foto (embedding) secara berurutan
+            // dengan MTCNN. Saat burst, request bisa mengantre di gunicorn, jadi
+            // beri timeout longgar (120s) agar selaras dengan GUNICORN_TIMEOUT.
+            $response = $this->client(120)->post("{$this->baseUrl}/api/face/register", $payload);
             return $response->json() ?? ['success' => false, 'message' => 'Respon tidak valid'];
         } catch (\Exception $e) {
             Log::error('[FaceAPI] register error: ' . $e->getMessage());

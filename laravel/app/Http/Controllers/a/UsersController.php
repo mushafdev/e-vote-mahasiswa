@@ -60,12 +60,14 @@ class UsersController extends Controller
                         return $btn;
                     })
                     ->addColumn('level', function($row){
-                        $d_level=array('su' =>'Super Admin','a'=>'Admin','p'=>'Panlih','kp'=>'Ketua Panlih','v'=>'Verifikator Suara');
-                        $d_color=array('su' =>'warning' ,'a'=>'info','p'=>'success','kp'=>'primary','v'=>'secondary');
+                        $d_level=array('su' =>'Super Admin','sa'=>'Sub Admin','a'=>'Admin','p'=>'Panlih','kp'=>'Ketua Panlih','v'=>'Verifikator Suara');
+                        $d_color=array('su' =>'warning' ,'sa'=>'dark','a'=>'info','p'=>'success','kp'=>'primary','v'=>'secondary');
+                        $label = $d_level[$row->role] ?? ucfirst($row->role);
+                        $color = $d_color[$row->role] ?? 'secondary';
                         if($row->role=='a'){
-                           $result= '<span class="badge badge-'.$d_color[$row->role].'">'.$d_level[$row->role].'</span>';
+                           $result= '<span class="badge badge-'.$color.'">'.$label.'</span>';
                         }else{
-                            $result='<span class="badge badge-'.$d_color[$row->role].'">'.$d_level[$row->role].'</span>'.'<span class="badge badge-secondary ml-1">'.$row->kelompok_tim.'</span>';
+                            $result='<span class="badge badge-'.$color.'">'.$label.'</span>'.'<span class="badge badge-secondary ml-1">'.$row->kelompok_tim.'</span>';
                         }
                         return $result;
                     })

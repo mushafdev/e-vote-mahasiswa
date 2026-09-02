@@ -18,3 +18,9 @@ services:
       FACE_MODEL: Facenet512
       DETECTOR_BACKEND: mtcnn
       FACE_DISTANCE_THRESHOLD: "0.40"
+      # Anti-spoof hanya saat verifikasi/voting, TIDAK saat registrasi (ringankan burst).
+      ANTISPOOF_ON_REGISTER: "false"
+      # Tuning gunicorn (server 2 core). Naikkan bila server diupgrade.
+      GUNICORN_WORKERS: "2"
+      GUNICORN_TIMEOUT: "120"
+      GUNICORN_BACKLOG: "256"

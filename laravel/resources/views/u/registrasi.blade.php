@@ -371,7 +371,7 @@
 <script type="text/javascript" src="{{asset('assets/vendor/architectui/scripts/parsley.min.js')}}"></script>
 <script type="text/javascript" src="{{asset('assets/vendor/architectui/scripts/sweetalert2.min.js')}}"></script>
 <link rel="stylesheet" href="{{asset('assets/vendor/architectui/css/sweetalert2.min.css')}}"/>
-<script src="{{asset('assets/js/page/registrasi/registrasi.js')}}?v=5"></script>
+<script src="{{asset('assets/js/page/registrasi/registrasi.js')}}?v=6"></script>
 <script src="{{asset('assets/js/page/public/custom.js')}}"></script>
 
 </body>

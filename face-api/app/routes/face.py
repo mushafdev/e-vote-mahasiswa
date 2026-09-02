@@ -32,18 +32,23 @@ def register():
     spoof_scores = []
     errors       = []
 
+    # Anti-spoof saat registrasi dikontrol via config (default OFF) supaya beban
+    # per request ringan saat registrasi serentak. Tetap aktif saat verifikasi.
+    antispoof_on = current_app.config.get('ANTISPOOF_ON_REGISTER', False)
+
     for i, b64 in enumerate(images_b64, 1):
         if not validate_base64_image(b64):
             errors.append(f'Foto {i}: format tidak valid')
             continue
         try:
-            img          = base64_to_numpy(b64)
-            spoof        = face_service.check_spoof(img)
-            spoof_scores.append(spoof)
+            img = base64_to_numpy(b64)
 
-            if not spoof['is_real']:
-                errors.append(f'Foto {i}: terdeteksi sebagai foto/video (spoof)')
-                continue
+            if antispoof_on:
+                spoof = face_service.check_spoof(img)
+                spoof_scores.append(spoof)
+                if not spoof['is_real']:
+                    errors.append(f'Foto {i}: terdeteksi sebagai foto/video (spoof)')
+                    continue
 
             emb = face_service.extract_embedding(img)
             embeddings.append(emb)

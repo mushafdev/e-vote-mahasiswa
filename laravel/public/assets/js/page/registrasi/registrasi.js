@@ -228,7 +228,9 @@ $('document').ready(function(){
                         location.reload();
                     });
                 }else{
-                    Swal.fire("Error", "There is an error", "error");
+                    var msg = "There is an error";
+                    try { msg = JSON.parse(reject.responseText).message || msg; } catch (e) {}
+                    Swal.fire("Gagal", msg, "error");
                 }
             }
         });

@@ -228,6 +228,12 @@ class LoginController extends Controller
 
             $user=$pemilih->first();
             if (Hash::check($password, $user->password)) {
+                // Akun tanpa embedding wajah tidak akan bisa lolos verifikasi wajah.
+                // Beri pesan yang jelas, jangan diteruskan ke step verifikasi (yang
+                // hanya akan menghasilkan "wajah tidak cocok" yang menyesatkan).
+                if (!$user->face_registered) {
+                    return response()->json(['message' => 'Wajah Anda belum terdaftar di sistem. Silakan registrasi ulang wajah atau hubungi panitia.'], 422);
+                }
                 $login = DB::table('sessions')->where('pemilih_id', $user->id)->count();
                 if ($login > 0)
                 {
@@ -438,23 +444,38 @@ class LoginController extends Controller
 
                 $pemilih->save();
                 if($pemilih){
-                    // Daftarkan wajah ke Face Recognition API (3 foto → average embedding)
+                    // Daftarkan wajah ke Face Recognition API (5 foto → average embedding)
                     $faceImages = array_filter($request->input('face_images', []));
                     if (empty($faceImages) && !empty($request->face_image)) {
                         $faceImages = [$request->face_image]; // backward-compat
                     }
                     if (!empty($faceImages)) {
+                        $faceOk = false;
                         try {
                             $faceService = new FaceRecognitionService();
                             $faceResult  = $faceService->register($pemilih->id, array_values($faceImages));
-                            if (!empty($faceResult['success'])) {
-                                $pemilih->face_registered    = true;
-                                $pemilih->face_registered_at = Carbon::now();
-                                $pemilih->save();
-                            }
+                            $faceOk = !empty($faceResult['success']);
                         } catch (Exception $e) {
                             Log::warning('[FaceAPI] Gagal register wajah pemilih '.$pemilih->id.': '.$e->getMessage());
+                            $faceOk = false;
                         }
+
+                        if (!$faceOk) {
+                            // Batalkan registrasi supaya TIDAK ada akun tanpa wajah
+                            // (yang nanti tak bisa login). Hapus file yang telanjur
+                            // terupload + baris pemilih, agar user bisa mengulang.
+                            if (!empty($pemilih->ktp)) { Storage::disk('ktp')->delete($pemilih->ktp); }
+                            if (!empty($pemilih->file_photo)) { Storage::disk('file_photo')->delete($pemilih->file_photo); }
+                            $pemilih->delete();
+
+                            return response()->json([
+                                'message' => 'Pendaftaran wajah gagal karena server sedang sibuk. Mohon ulangi registrasi beberapa saat lagi.',
+                            ], 503);
+                        }
+
+                        $pemilih->face_registered    = true;
+                        $pemilih->face_registered_at = Carbon::now();
+                        $pemilih->save();
                     }
 
                     $request->session()->flash('success', 'Registrasi berhasil! Silahkan login menggunakan username dan password Anda.');

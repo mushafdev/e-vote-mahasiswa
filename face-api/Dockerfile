@@ -14,4 +14,7 @@ COPY . .
 RUN mkdir -p storage/embeddings
 
 EXPOSE 5055
-CMD ["python", "run.py"]
+
+# Produksi: gunicorn (multi-worker, antre koneksi) — bukan dev server 1-thread.
+# Konfigurasi lengkap di gunicorn.conf.py.
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "run:app"]
