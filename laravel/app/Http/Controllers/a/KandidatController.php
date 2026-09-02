@@ -448,8 +448,10 @@ class KandidatController extends Controller
 
             $totalPemilih=DB::table('pemilihs')->where('verifikasi','Y')->where('email_verifikasi','Y')->where('aktif','Y')->count();
             $belumMemilih = DB::table('pemilihs')->where('verifikasi','Y')->where('email_verifikasi','Y')->where('aktif','Y')->whereNull('pemilihs.vote_enc')->count();
-            $sah = DB::table('pemilihs')->whereNotNull('pemilihs.vote_enc')->whereNotNull('pemilihs.verify_vote_by')->where('pemilihs.verifikasi_vote','Y')->count();
-            $tidakSah = DB::table('pemilihs')->whereNotNull('pemilihs.vote_enc')->whereNotNull('pemilihs.verify_vote_by')->where('pemilihs.verifikasi_vote','N')->count();
+            // Tidak ada lagi verifikasi suara oleh panlih: suara sah secara default
+            // (verifikasi_vote='Y' di-set otomatis saat memilih), tanpa syarat verify_vote_by.
+            $sah = DB::table('pemilihs')->whereNotNull('pemilihs.vote_enc')->where('pemilihs.verifikasi_vote','Y')->count();
+            $tidakSah = DB::table('pemilihs')->whereNotNull('pemilihs.vote_enc')->where('pemilihs.verifikasi_vote','N')->count();
 
             $json_data = array(
                 "draw"            => intval($request->input('draw')),  
