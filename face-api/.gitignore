@@ -6,3 +6,13 @@ __pycache__/
 .DS_Store
 storage/embeddings/*.json
 *.log
+
+# Data pengujian akurasi (memuat wajah — jangan di-commit)
+eval_dataset/
+eval_output/
+scripts/eval_dataset/
+scripts/eval_output/
+pad_dataset/
+pad_output/
+scripts/pad_dataset/
+scripts/pad_output/

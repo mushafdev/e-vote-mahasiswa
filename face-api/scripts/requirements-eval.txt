@@ -1,0 +1,4 @@
+# Dependensi tambahan khusus untuk script evaluasi (evaluate_accuracy.py).
+# DeepFace/TensorFlow/numpy sudah ada di requirements.txt utama.
+scikit-learn>=1.3.0
+matplotlib>=3.7.0

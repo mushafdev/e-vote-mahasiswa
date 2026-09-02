@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             UnitKerjaSeeder::class,
             UsersSeeder::class,
             PemilihSeeder::class,
+            KandidatSeeder::class,
             SettingSeeder::class,
           ]);
     }
