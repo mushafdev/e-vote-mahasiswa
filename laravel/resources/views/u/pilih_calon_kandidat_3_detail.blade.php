@@ -19,11 +19,14 @@
     </div>
 </div>
 
-@if (!empty($pemilih->kandidat_id))
+@if (!empty($pemilih->vote_enc))
 <div class="row card align-items-center pb-5 pt-5">
     <div class="col-md-12 text-center">
         <div class="alert alert-success">
-            <h5>Anda telah memilih kandidat</h5>
+            <i class="pe-7s-check" style="font-size: 3rem;"></i>
+            <h4 class="font-weight-bold mt-2">Anda Sudah Memilih</h4>
+            <h5 class="mb-0">Terima kasih, suara Anda telah tercatat.</h5>
+            <p class="mt-2 mb-0 text-muted">Setiap pemilih hanya dapat memilih satu kali.</p>
         </div>
     </div>
 </div>

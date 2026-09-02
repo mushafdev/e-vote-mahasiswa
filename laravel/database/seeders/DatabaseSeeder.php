@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             KelompokTimSeeder::class,
 
             UnitKerjaSeeder::class,
+            SuperAdminSeeder::class,
             UsersSeeder::class,
             PemilihSeeder::class,
             KandidatSeeder::class,

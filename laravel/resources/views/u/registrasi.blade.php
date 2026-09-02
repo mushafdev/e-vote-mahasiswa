@@ -21,7 +21,9 @@
     <!--Custom styles-->
 	<link rel="stylesheet" type="text/css" href="{{asset('assets/css/login.css')}}">
 	<link href="{{asset('assets/vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet" id="bootstrap-css">
+    @if(Formatter::identity()['cloudflare']=='active')
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     <style>
         ul.timeline {
             list-style-type: none;
@@ -261,9 +263,11 @@
                                 <input type="hidden" name="face_images[]" id="face_image_4">
                                 <input type="hidden" name="face_images[]" id="face_image_5">
 
+                                @if(Formatter::identity()['cloudflare']=='active')
                                 <div class="col-md-12 mt-2 p-0">
                                     <div class="cf-turnstile" data-sitekey="{{config('services.cloudflare.turnstile.site_key')}}" data-callback="onTurnstileSuccess"></div>
                                 </div>
+                                @endif
                             </div>
 
                         </div>
@@ -367,7 +371,7 @@
 <script type="text/javascript" src="{{asset('assets/vendor/architectui/scripts/parsley.min.js')}}"></script>
 <script type="text/javascript" src="{{asset('assets/vendor/architectui/scripts/sweetalert2.min.js')}}"></script>
 <link rel="stylesheet" href="{{asset('assets/vendor/architectui/css/sweetalert2.min.css')}}"/>
-<script src="{{asset('assets/js/page/registrasi/registrasi.js')}}?v=4"></script>
+<script src="{{asset('assets/js/page/registrasi/registrasi.js')}}?v=5"></script>
 <script src="{{asset('assets/js/page/public/custom.js')}}"></script>
 
 </body>

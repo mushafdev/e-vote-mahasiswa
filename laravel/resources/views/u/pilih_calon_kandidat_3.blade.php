@@ -2,7 +2,9 @@
 
 @section('content')
 
+@if(Formatter::identity()['cloudflare']=='active')
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+@endif
 <div class="app-page-title">
     <div class="page-title-wrapper">
         <div class="page-title-heading">
@@ -21,11 +23,17 @@
 </div>
 
 @if($check)
-@if (!empty($pemilih->kandidat_id))
-<div class="row card align-items-center pb-5 pt-5">
+@if (!empty($pemilih->vote_enc))
+<div class="row card align-items-center pb-5 pt-5" style="min-height: 300px;">
     <div class="col-md-12 text-center">
         <div class="alert alert-success">
-            <h5>Anda telah memilih kandidat</h5>
+            <i class="pe-7s-check" style="font-size: 3rem;"></i>
+            <h4 class="font-weight-bold mt-2">Anda Sudah Memilih</h4>
+            <h5 class="mb-0">Terima kasih, suara Anda telah tercatat.</h5>
+            @if(!empty($pemilih->time_vote_final))
+            <p class="mt-2 mb-0">Waktu memilih: <b>{{ \Carbon\Carbon::parse($pemilih->time_vote_final)->format('d-m-Y H:i:s') }}</b></p>
+            @endif
+            <p class="mt-2 mb-0 text-muted">Setiap pemilih hanya dapat memilih satu kali.</p>
         </div>
     </div>
 </div>

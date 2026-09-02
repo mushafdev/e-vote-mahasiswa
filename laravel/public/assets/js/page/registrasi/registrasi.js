@@ -1,4 +1,69 @@
 
+// ==========================================================================
+// Progress registrasi — memberi umpan balik bertahap selama proses simpan
+// berjalan (upload data + pendaftaran wajah yang butuh beberapa detik).
+// Progress ini bersifat perkiraan waktu (tidak ada event progress dari server),
+// naik bertahap dan berhenti di 90% sampai respons server benar-benar diterima.
+// ==========================================================================
+var _regProgTimer = null;
+
+function startRegProgress() {
+    var steps = [
+        { at: 0,   text: 'Mengunggah data & foto...' },
+        { at: 20,  text: 'Menyimpan data pendaftaran...' },
+        { at: 40,  text: 'Mendaftarkan wajah Anda (mohon tunggu)...' },
+        { at: 75,  text: 'Memproses verifikasi wajah...' },
+        { at: 90,  text: 'Menyelesaikan pendaftaran...' },
+    ];
+
+    Swal.fire({
+        title: 'Memproses Registrasi',
+        html:
+            '<div style="text-align:center">' +
+            '<p id="reg-progress-text" style="margin-bottom:12px;color:#555">Mengunggah data & foto...</p>' +
+            '<div style="background:#eee;border-radius:8px;height:16px;overflow:hidden">' +
+            '<div id="reg-progress-bar" style="width:0%;height:100%;background:#d32f2f;transition:width .4s ease;border-radius:8px"></div>' +
+            '</div>' +
+            '<p id="reg-progress-pct" style="margin-top:8px;font-weight:600;color:#d32f2f">0%</p>' +
+            '<small style="color:#999">Mohon jangan tutup atau refresh halaman ini.</small>' +
+            '</div>',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+    });
+
+    var pct = 0;
+    _regProgTimer = setInterval(function () {
+        // Naik pelan; mentok di 90% sampai server merespons.
+        if (pct < 90) {
+            pct += 1;
+            var bar = document.getElementById('reg-progress-bar');
+            var pctEl = document.getElementById('reg-progress-pct');
+            var txtEl = document.getElementById('reg-progress-text');
+            if (bar) bar.style.width = pct + '%';
+            if (pctEl) pctEl.textContent = pct + '%';
+            if (txtEl) {
+                for (var i = steps.length - 1; i >= 0; i--) {
+                    if (pct >= steps[i].at) { txtEl.textContent = steps[i].text; break; }
+                }
+            }
+        }
+    }, 250);
+}
+
+function finishRegProgress() {
+    if (_regProgTimer) { clearInterval(_regProgTimer); _regProgTimer = null; }
+    var bar = document.getElementById('reg-progress-bar');
+    var pctEl = document.getElementById('reg-progress-pct');
+    var txtEl = document.getElementById('reg-progress-text');
+    if (bar) bar.style.width = '100%';
+    if (pctEl) pctEl.textContent = '100%';
+    if (txtEl) txtEl.textContent = 'Registrasi selesai!';
+}
+
+function stopRegProgress() {
+    if (_regProgTimer) { clearInterval(_regProgTimer); _regProgTimer = null; }
+}
 
 $('document').ready(function(){
 
@@ -115,6 +180,7 @@ $('document').ready(function(){
 
         // face_images[] sudah ada di form via hidden inputs, ikut otomatis di FormData
         // (face_image_1 .. face_image_5 → name="face_images[]")
+        startRegProgress();
         ax_save = $.ajax({
             type    : 'POST',
             data    : form_data,
@@ -125,23 +191,28 @@ $('document').ready(function(){
             url     : urlSave,
             DataType: 'json',
             success : function(data) {
+            finishRegProgress();
             process_done1(param,'Registrasi');
-            Swal.fire({
+            setTimeout(function(){
+                Swal.fire({
                     title: "Success!",
-                    text: 'Data sukses dikirim',
+                    text: 'Registrasi berhasil! Anda akan diarahkan ke halaman login.',
                     type: "success",
                     timer: 2000
                 }).then((result) => {
                     location.replace(data.url);
 
                 });
+            }, 500);
             },
             error: function (reject) {
+                stopRegProgress();
                 process_done1(param,'Registrasi');
 
                 $('#form-registrasi').parsley().reset();
                 $('#file_photo').parsley().removeError('uniqueerror', {updateClass: true});
                 if( reject.status === 422 ) {
+                    Swal.close();
                     var data=reject.responseText;
                     var jsonResponse = JSON.parse(data);
                     $.each( jsonResponse.errors, function( key, value) {

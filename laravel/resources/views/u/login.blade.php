@@ -10,7 +10,9 @@
 	<title>{{Formatter::identity()['title']}} - Login</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if(Formatter::identity()['cloudflare']=='active')
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
     <link rel="stylesheet" href="{{asset('assets/css/poppins-font.css')}}"/>
     <link href="{{asset('assets/vendor/fontawesome/css/fontawesome-all.min.css')}}" rel="stylesheet">
     <link href="{{asset('assets/vendor/slick/slick.css')}}" rel="stylesheet">
@@ -132,7 +134,9 @@
                             </div>
                         </div>
                         <div class="col-md-12 mt-2">
+                            @if(Formatter::identity()['cloudflare']=='active')
                             <div class="cf-turnstile" data-sitekey="{{config('services.cloudflare.turnstile.site_key')}}" data-callback="onTurnstileSuccess"></div>
+                            @endif
                         </div>
                     </div>
                     <div class="divider row mt-4"></div>

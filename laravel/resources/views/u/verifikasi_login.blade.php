@@ -21,7 +21,9 @@
     <!--Custom styles-->
 	<link rel="stylesheet" type="text/css" href="{{asset('assets/css/login.css')}}">
 	<link href="{{asset('assets/vendor/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet" id="bootstrap-css">
+    @if(Formatter::identity()['cloudflare']=='active')
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    @endif
 	
 
 </head>
@@ -46,9 +48,11 @@
                                     </p>
                                     <input type="number" name="kode_otp" id="kode_otp" autofocus class="form-control text-center" style="font-size: 20pt !important;letter-spacing: 8px;font-weight: 600;" autocomplete="false">
                                     <a href="#" id="request-otp" class="w-100 mt-2"><small>Kirim ulang Kode OTP</small></a>
+                                    @if(Formatter::identity()['cloudflare']=='active')
                                     <div class="cf-turnstile" data-sitekey="{{config('services.cloudflare.turnstile.site_key')}}" data-callback="onTurnstileSuccess">
-                                    
+
                                     </div>
+                                    @endif
                                     <button type="button" id="verifikasi" name="verifikasi" {{Formatter::identity()['cloudflare']=='active'?'disabled="true"':''}} class="btn btn-success w-100 mt-2">Verifikasi</button>
                                 </div>
                             </div>

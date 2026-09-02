@@ -2,7 +2,9 @@
 
 @section('content')
 
+@if(Formatter::identity()['cloudflare']=='active')
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+@endif
 <div class="app-page-title">
     <div class="page-title-wrapper">
         <div class="page-title-heading">
@@ -119,11 +121,13 @@
                     </div>
                     @endif
 
+                    @if(Formatter::identity()['cloudflare']=='active')
                     <div class="col-md-12 text-center mt-2">
                         <div class="cf-turnstile" data-sitekey="{{config('services.cloudflare.turnstile.site_key')}}" data-callback="onTurnstileSuccess">
 
                         </div>
                     </div>
+                    @endif
                   </div>
               </form>
           </div>

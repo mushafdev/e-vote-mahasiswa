@@ -33,6 +33,12 @@ class AuthServiceProvider extends ServiceProvider
                 ->action('Verify Email Address', $url);
         });
 
-        //
+        // Super Admin (role 'su') otomatis lolos SEMUA pengecekan permission.
+        // Mengembalikan null (bukan false) untuk user lain agar pengecekan normal
+        // tetap berjalan. Catatan: middleware `role:` tetap butuh user benar-benar
+        // memiliki role Spatie 'su' (di-assign lewat SuperAdminSeeder).
+        Gate::before(function ($user, $ability) {
+            return (method_exists($user, 'hasRole') && $user->hasRole('su')) ? true : null;
+        });
     }
 }
