@@ -17,7 +17,10 @@ class FaceRecognitionService
         $this->apiKey  = config('services.face_api.key', '');
     }
 
-    private function client(int $timeout = 15)
+    // Default timeout untuk verify (login/voting). Dinaikkan dari 15s → 45s agar
+    // saat banyak yang login/memilih bersamaan, request yang mengantre di gunicorn
+    // tidak keburu timeout (verify 1 foto relatif cepat, tapi bisa antre saat burst).
+    private function client(int $timeout = 45)
     {
         return Http::withHeaders(['X-API-Key' => $this->apiKey])->timeout($timeout);
     }
@@ -36,9 +39,10 @@ class FaceRecognitionService
                 $payload['images_base64'] = [$imagesBase64];
             }
             // Registrasi memproses beberapa foto (embedding) secara berurutan
-            // dengan MTCNN. Saat burst, request bisa mengantre di gunicorn, jadi
-            // beri timeout longgar (120s) agar selaras dengan GUNICORN_TIMEOUT.
-            $response = $this->client(120)->post("{$this->baseUrl}/api/face/register", $payload);
+            // dengan MTCNN. Saat burst 40 serentak, ekor antrean selesai ~156s
+            // (hasil load test), jadi beri timeout 180s agar semua tuntas tanpa
+            // rollback. Selaras dengan GUNICORN_TIMEOUT=180.
+            $response = $this->client(180)->post("{$this->baseUrl}/api/face/register", $payload);
             return $response->json() ?? ['success' => false, 'message' => 'Respon tidak valid'];
         } catch (\Exception $e) {
             Log::error('[FaceAPI] register error: ' . $e->getMessage());

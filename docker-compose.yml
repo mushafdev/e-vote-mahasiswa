@@ -24,7 +24,7 @@ services:
       FACE_MAX_IMAGE_DIM: "640"
       # Tuning gunicorn (server 2 core). Naikkan bila server diupgrade.
       GUNICORN_WORKERS: "2"
-      GUNICORN_TIMEOUT: "120"
+      GUNICORN_TIMEOUT: "180"
       GUNICORN_BACKLOG: "256"
       # Batasi thread TensorFlow: tiap worker 1 thread → 2 worker mengisi 2 core
       # dengan bersih (tanpa saling berebut yang justru memperlambat semua).

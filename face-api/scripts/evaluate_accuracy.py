@@ -38,12 +38,30 @@ import numpy as np
 FACE_MODEL = os.getenv("FACE_MODEL", "Facenet512")
 DETECTOR_BACKEND = os.getenv("DETECTOR_BACKEND", "mtcnn")
 
+# Batas sisi terpanjang gambar sebelum deteksi (0 = tanpa batas). Diisi dari
+# argumen --max-dim di main(). Set ke 640 untuk MENIRU produksi (yang men-
+# downscale gambar besar), atau 0 untuk memakai resolusi penuh. Menjalankan
+# eval dua kali (0 vs 640) → bukti empiris pengaruh downscaling ke akurasi.
+_MAX_DIM = int(os.getenv("FACE_MAX_IMAGE_DIM", "0"))
+
 
 def get_embedding(img_path, deepface):
     """Ekstrak 1 embedding dari sebuah gambar. Return None bila wajah gagal terdeteksi."""
     try:
+        img_input = img_path
+        if _MAX_DIM and _MAX_DIM > 0:
+            import cv2
+            img = cv2.imread(img_path)
+            if img is not None:
+                h, w = img.shape[:2]
+                longest = max(h, w)
+                if longest > _MAX_DIM:
+                    scale = _MAX_DIM / float(longest)
+                    img = cv2.resize(img, (max(1, int(w * scale)), max(1, int(h * scale))),
+                                     interpolation=cv2.INTER_AREA)
+                img_input = img  # samakan preprocessing dengan produksi (BGR ndarray)
         res = deepface.represent(
-            img_path=img_path,
+            img_path=img_input,
             model_name=FACE_MODEL,
             detector_backend=DETECTOR_BACKEND,
             enforce_detection=True,
@@ -220,7 +238,14 @@ def main():
     ap.add_argument("--dataset", required=True, help="Folder dataset (lihat struktur di docstring)")
     ap.add_argument("--threshold", type=float, default=0.60, help="Operating threshold cosine (default 0.60)")
     ap.add_argument("--out", default="./eval_output", help="Folder output")
+    ap.add_argument("--max-dim", type=int, default=0,
+                    help="Batasi sisi terpanjang gambar (px) sebelum deteksi, meniru produksi. "
+                         "0 = resolusi penuh. Bandingkan 0 vs 640 untuk uji dampak downscaling.")
     args = ap.parse_args()
+
+    global _MAX_DIM
+    _MAX_DIM = args.max_dim
+    print(f"Downscale sisi terpanjang: {'OFF (resolusi penuh)' if _MAX_DIM <= 0 else str(_MAX_DIM) + 'px (meniru produksi)'}")
 
     os.makedirs(args.out, exist_ok=True)
 
