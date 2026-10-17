@@ -16,3 +16,6 @@ pad_dataset/
 pad_output/
 scripts/pad_dataset/
 scripts/pad_output/
+
+# Bobot model DeepFace (DEEPFACE_HOME=/app/storage)
+storage/.deepface/

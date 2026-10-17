@@ -8,12 +8,16 @@ services:
     container_name: evote_face_api
     restart: unless-stopped
     ports:
-      - "5055:5055"
+      # Hanya untuk Laravel di host yang sama — jangan dibuka ke internet.
+      - "127.0.0.1:5055:5055"
     volumes:
       - ./face-api/storage:/app/storage
     environment:
       FLASK_ENV: production
       FLASK_PORT: 5055
+      # Bobot model DeepFace disimpan di volume storage → tidak diunduh ulang
+      # setiap container dibuat ulang (~95MB Facenet512).
+      DEEPFACE_HOME: /app/storage
       API_SECRET_KEY: evote_face_secret_2024
       FACE_MODEL: Facenet512
       DETECTOR_BACKEND: mtcnn
