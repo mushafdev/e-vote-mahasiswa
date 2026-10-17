@@ -177,20 +177,8 @@ class LoginController extends Controller
 
         try {
             $faceService = new FaceRecognitionService();
-            $result = $faceService->verify($user->id, $imageBase64);
-
-            // Log verifikasi
-            \App\Models\FaceVerifyLog::create([
-                'pemilih_id'      => $user->id,
-                'aksi'            => 'verify_login',
-                'match'           => $result['match'] ?? false,
-                'confidence'      => $result['confidence'] ?? 0,
-                'threshold'       => $result['threshold'] ?? 60,
-                'is_real'         => $result['is_real'] ?? true,
-                'spoof_score'     => $result['spoof_score'] ?? 1.0,
-                'antispoof_label' => $result['antispoof_label'] ?? 'real',
-                'ip_address'      => $request->ip(),
-            ]);
+            // verify() sudah menyimpan log ke face_verify_logs dengan aksi ini
+            $result = $faceService->verify($user->id, $imageBase64, 'verify_login');
 
             if (!($result['match'] ?? false)) {
                 $reason = !($result['is_real'] ?? true) ? 'Terdeteksi spoofing, gunakan wajah asli.' : 'Wajah tidak cocok, coba lagi.';
