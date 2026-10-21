@@ -21,7 +21,9 @@ Ada **5 aktivitas uji**:
 - [ ] **Deploy final** Face API (gunicorn + downscaling) & Laravel (rollback + gate login).
 - [ ] **Informed consent** tertulis tiap subjek (wajib etika + Sinta 2). Simpan arsipnya.
 - [ ] Pastikan **anti-spoofing aktif saat verifikasi** (`ANTISPOOF_ON_REGISTER=false` → registrasi
-      cepat; liveness tetap jalan di login & voting). **Selaraskan kalimat artikel** (lihat §7).
+      cepat; liveness tetap jalan di login & voting). Kalimat artikel: lihat [REVISI_ARTIKEL.md](REVISI_ARTIKEL.md) §1.
+- [ ] Jalankan migrasi `durasi_ms` di server (`php artisan migrate`) **sebelum** uji kelas (§6).
+- [ ] Nonaktifkan endpoint voting lama (lihat bagian akhir REVISI_ARTIKEL.md) sebelum black-box.
 - [ ] Siapkan `pip install -r scripts/requirements-eval.txt` untuk grafik.
 
 ---
@@ -35,12 +37,13 @@ Ada **5 aktivitas uji**:
 | Distribusi genuine vs impostor (Gambar 8) | A | `similarity_distribution.png` |
 | Justifikasi ambang 0,60 | A | `threshold_sweep.csv` |
 | Jumlah subjek, total citra uji (2.2, 3.1) | A/E | rekap dataset |
-| Detection rate MTCNN, citra dieksklusi (3.1, 3.6) | A | ringkasan `evaluate_accuracy.py` (baris `[SKIP]`) |
-| Distribusi 5 pose (Gambar 6) | E | rekap dataset → bar chart |
+| Detection rate MTCNN, citra dieksklusi (3.1, 3.6) | A | `metrics.json` → `detection_rate_percent`; rincian `detection_log.csv` |
+| Contoh preprocessing MTCNN (Gambar 2) | A | `buat_gambar.py mtcnn` |
+| Detection rate per pose (Gambar 6) | A | `buat_gambar.py pose` (dari `detection_log.csv`) |
 | Tolak foto cetak & video replay (3.3, 3.6) | B | `pad_metrics.json` (APCER/BPCER/ACER) |
 | Jumlah skenario black-box + hasil (Tabel 2, Tabel 5, keberhasilan) | C | tabel uji manual |
-| Jumlah responden, skor SUS, kategori (Tabel 6, Gambar 11) | D | rekap kuesioner |
-| Waktu respons verifikasi rata-rata (3.3) | E | pengukuran verify |
+| Jumlah responden, skor SUS, kategori (Tabel 6, Gambar 11) | D | `buat_gambar.py sus` (dari `kuesioner_sus.xlsx`) |
+| Waktu respons verifikasi rata-rata (3.3) | E | `face_verify_logs.durasi_ms` (ekspor CSV) |
 
 ---
 
@@ -50,7 +53,8 @@ Ikuti [PROTOKOL_PENGUJIAN_AKURASI.md](PROTOKOL_PENGUJIAN_AKURASI.md) §2–6. Ri
 
 1. Kumpulkan **≥30 subjek** (target 50) × 5 foto enroll + ≥6 foto uji **sesi berbeda**, variasi
    pencahayaan/pose/kacamata.
-2. Susun folder `eval_dataset/subjek_xx/enroll|test/`.
+2. Susun folder `eval_dataset/subjek_xx/enroll|test/`. Foto enroll **dinamai sesuai pose**:
+   `depan.jpg kiri.jpg kanan.jpg menunduk.jpg mendongak.jpg` (dipakai untuk Gambar 6).
 3. Jalankan **dua kali** — untuk sekaligus membuktikan downscaling tak menurunkan akurasi:
    ```bash
    # meniru produksi (gambar di-downscale ke 640)
@@ -60,6 +64,13 @@ Ikuti [PROTOKOL_PENGUJIAN_AKURASI.md](PROTOKOL_PENGUJIAN_AKURASI.md) §2–6. Ri
    ```
 4. Pakai hasil `eval_640` (mewakili produksi) untuk Tabel 3 / Gambar 7 / Gambar 8. Sebutkan di
    Pembahasan bahwa metrik `eval_full` ≈ `eval_640` → downscaling aman.
+5. Gambar 2 & 6:
+   ```bash
+   # Gambar 2 — 4–6 foto contoh dari subjek yang setuju dipublikasikan (atau tambah --blur)
+   python scripts/buat_gambar.py mtcnn --images f1.jpg f2.jpg f3.jpg f4.jpg --out ./gambar/gambar2_mtcnn.png
+   # Gambar 6 — detection rate per pose
+   python scripts/buat_gambar.py pose --log ./eval_640/detection_log.csv --out ./gambar/gambar6_pose.png
+   ```
 
 > **Detection rate** (Gambar 3.1) = (jumlah foto berhasil diproses) / (total foto). Baris `[SKIP]`
 > pada output skrip = foto yang wajahnya gagal terdeteksi → dieksklusi.
@@ -106,18 +117,33 @@ Skenario di bawah sesuai alur sistem nyata — sesuaikan bila perlu.
 | 17 | Pencegahan Double Voting | Memilih dua kali | pemilih yang sudah memilih | Ditolak: sudah memilih |
 | 18 | Rekapitulasi | Rekap hasil real-time | buka dashboard admin | Jumlah suara benar (hasil dekripsi) |
 | 19 | Rekapitulasi | Grafik perolehan suara | buka halaman hasil | Grafik batang tampil sesuai data |
+| 20 | Login & Autentikasi | Username atau password kosong | form dikosongkan | Ditolak: "Username kosong" / "Password kosong" |
+| 21 | Login & Autentikasi | Username < 5 karakter | username 3 karakter | Ditolak: "Username tidak boleh lebih kecil dari 5 karakter" |
+| 22 | Login & Autentikasi | Akun nonaktif | akun aktif = N | Ditolak: "Username atau password tidak valid." |
+| 23 | Login & Autentikasi | Captcha tidak valid | login tanpa captcha Turnstile | Ditolak HTTP 400 (bila captcha Cloudflare aktif) |
+| 24 | Login & Autentikasi | Logout lalu login ulang | logout → login lagi | Berhasil (tidak ditolak sebagai perangkat lain) |
+| 25 | Keamanan (Bypass Autentikasi) | Buka verifikasi wajah tanpa login password | URL /verifikasi-wajah-login | Dialihkan ke login: "Sesi tidak valid…" |
+| 26 | Keamanan (Bypass Autentikasi) | Kirim verifikasi wajah tanpa sesi | POST langsung /verifikasi-wajah-login | HTTP 401 "Sesi tidak valid" |
+| 27 | Keamanan (Bypass Autentikasi) | Buka halaman pemilihan tanpa login | URL /account/home, /pilih-calon-kandidat | HTTP 404 |
+| 28 | Keamanan (Bypass Autentikasi) | Kirim suara tanpa foto wajah | POST /pilih-kandidat-3-update tanpa face_image | Ditolak: "Verifikasi wajah diperlukan…" |
+| 29 | Keamanan (Bypass Autentikasi) | Kirim suara tanpa token CSRF | POST tanpa _token | HTTP 419 |
+| 30 | Keamanan (Bypass Autentikasi) | Pemilih membuka halaman admin | /pemilih, /face-verify-log | HTTP 404 |
+| 31 | Keamanan (Bypass Autentikasi) | Face API tanpa/salah API key | curl tanpa X-API-Key | HTTP 401 "Unauthorized" |
+| 32 | Keamanan (Bypass Autentikasi) | Akses Face API dari luar server | http://<IP-server>:5055 | Koneksi ditolak (hanya 127.0.0.1) |
+| 33 | Keamanan (Bypass Autentikasi) | Kirim suara lewat endpoint lama | POST /pilih-kandidat-2-update tanpa face_image | Ditolak; suara tidak tersimpan ⚠ lihat REVISI_ARTIKEL.md |
 
 **Tabel 5 (ringkasan)** — kelompokkan per modul:
 
 | Modul | Jumlah Skenario | Berhasil | Hasil |
 |-------|-----------------|----------|-------|
-| Login & Autentikasi | 4 | … | … |
+| Login & Autentikasi | 9 | … | … |
 | Registrasi Wajah | 5 | … | … |
 | Verifikasi Face Recognition | 4 | … | … |
 | Pemungutan Suara | 3 | … | … |
 | Pencegahan Double Voting | 1 | … | … |
 | Rekapitulasi | 2 | … | … |
-| **Total** | **19** | **…** | **…% berhasil** |
+| Keamanan (Bypass Autentikasi) | 9 | … | … |
+| **Total** | **33** | **…** | **…% berhasil** |
 
 ---
 
@@ -147,7 +173,10 @@ Skala 1 (Sangat Tidak Setuju) – 5 (Sangat Setuju).
 
 **Kategori (Bangor et al.):** ≥ 80,3 = Excellent (A) · 68–80,3 = Good (B) · 51–68 = OK · < 51 = Poor.
 
-Gambar 11 = bar chart rerata tiap item (1–5); Tabel 6 = skor rerata + bobot per item.
+Gambar 11 = bar chart rerata tiap item (1–5); Tabel 6 = skor rerata + bobot per item:
+```bash
+python scripts/buat_gambar.py sus --xlsx ./pengujian/kuesioner_sus.xlsx --out ./gambar
+```
 
 ---
 
@@ -160,20 +189,19 @@ docker exec evote_face_api python3 scripts/loadtest.py --url http://localhost:50
   --key evote_face_secret_2024 --image /app/storage/foto.jpeg \
   --concurrency 1 --total 5 --photos 1 --verify
 ```
-Ambil latensi **VERIFY** (bukan register). Alternatif paling sahih: ekspor `face_verify_logs`
-dari sistem saat uji kelas (sudah mencatat confidence + waktu tiap verifikasi nyata).
-
-**Distribusi pose (Gambar 6):** rekap jumlah foto per pose (depan/kiri/kanan/menunduk/mendongak)
-dari dataset enrollment → bar/pie chart.
+Ambil latensi **VERIFY** (bukan register). Sumber paling sahih: kolom `durasi_ms` di
+`face_verify_logs` selama uji kelas — durasi tiap verifikasi nyata, diukur di server Laravel dari
+permintaan ke Face API sampai respons (tidak termasuk unggah foto dari browser). Ambil dari
+menu admin **Log Verifikasi Wajah** (rata-rata tampil di atas grafik; ekspor CSV kolom
+`Durasi (ms)`), lalu laporkan rata-rata dan median. Baris kosong = Face API tidak merespons.
 
 ---
 
 ## 7. Penyelarasan artikel (WAJIB dicek sebelum submit)
 
-- [ ] **Anti-spoofing:** ganti kalimat "dijalankan pada setiap **registrasi maupun** verifikasi"
-      → "dijalankan pada setiap **verifikasi (login dan pemungutan suara)**". (Bagian 3.6 & 2.4.)
-      Alasan defensif: liveness pada titik verifikasi adalah pertahanan sebenarnya; enroll foto
-      tetap akan gagal saat verifikasi live.
+- [ ] Terapkan daftar revisi kalimat di [REVISI_ARTIKEL.md](REVISI_ARTIKEL.md) (anti-spoofing,
+      klaim "berbagai kondisi", ambang ROC, klaim bypass, alur login, cakupan black-box,
+      waktu respons, Gambar 6 & 11).
 - [ ] Isi semua `[HASIL PENGUJIAN NYATA]` dari output aktivitas A–E.
 - [ ] Tambahkan **FAR, FRR, EER, AUC** ke narasi (reviewer Sinta 2 menghargai metrik ambang-independen).
 - [ ] Sertakan hasil **kinerja/beban** (throughput ~1,3 foto/dtk, 40 registrasi serentak = ~156 dtk,

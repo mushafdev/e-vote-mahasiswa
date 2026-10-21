@@ -31,6 +31,14 @@ def _warmup(model: str, detector: str):
     except Exception as e:
         print(f'[warmup] dilewati ({e}) — model akan dimuat saat request pertama.', flush=True)
 
+    # Model anti-spoofing (Fasnet, butuh torch) dipakai saat verifikasi login & voting.
+    try:
+        from deepface.modules import modeling
+        modeling.build_model(task='spoofing', model_name='Fasnet')
+        print('[warmup] anti-spoofing Fasnet siap.', flush=True)
+    except Exception as e:
+        print(f'[warmup] anti-spoofing TIDAK aktif ({e}).', flush=True)
+
 
 def create_app():
     app = Flask(__name__)

@@ -8,7 +8,7 @@ class FaceVerifyLog extends Model
 {
     protected $fillable = [
         'pemilih_id', 'aksi', 'match', 'confidence', 'threshold',
-        'is_real', 'spoof_score', 'antispoof_label', 'keterangan', 'ip_address',
+        'is_real', 'spoof_score', 'antispoof_label', 'durasi_ms', 'keterangan', 'ip_address',
     ];
 
     public function pemilih()

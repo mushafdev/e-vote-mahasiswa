@@ -22,6 +22,8 @@ class FaceVerifyLogController extends Controller
         $d['total_gagal']     = FaceVerifyLog::where('match', false)->count();
         $d['rata_confidence'] = FaceVerifyLog::where('match', true)->avg('confidence') ?? 0;
         $d['total_register']  = \App\Models\Pemilih::where('face_registered', true)->count();
+        $d['rata_durasi_ms']  = FaceVerifyLog::whereNotNull('durasi_ms')->avg('durasi_ms');
+        $d['n_durasi']        = FaceVerifyLog::whereNotNull('durasi_ms')->count();
 
         return view('a.face_verify_log.index', $d);
     }
@@ -52,6 +54,7 @@ class FaceVerifyLogController extends Controller
                 : '<span class="badge badge-danger">Gagal</span>';
 
             $confidenceBar = $this->confidenceBar($dt->confidence);
+            $durasi        = $dt->durasi_ms !== null ? number_format($dt->durasi_ms / 1000, 2) . ' dtk' : '-';
 
             $table .= "<tr>
                 <td class='text-center'>" . ($data->firstItem() + $i) . "</td>
@@ -60,6 +63,7 @@ class FaceVerifyLogController extends Controller
                 <td class='text-center'>{$matchBadge}</td>
                 <td>{$confidenceBar}</td>
                 <td class='text-center'>{$dt->threshold}%</td>
+                <td class='text-center'><small>{$durasi}</small></td>
                 <td class='text-center'><small>{$dt->ip_address}</small></td>
                 <td class='text-center'><small>" . \Carbon\Carbon::parse($dt->created_at)->format('d/m/Y H:i:s') . "</small></td>
             </tr>";
@@ -101,6 +105,7 @@ class FaceVerifyLogController extends Controller
                 'match'           => FaceVerifyLog::where('match', true)->count(),
                 'gagal'           => FaceVerifyLog::where('match', false)->count(),
                 'avg_confidence'  => round(FaceVerifyLog::where('match', true)->avg('confidence') ?? 0, 2),
+                'avg_durasi_ms'   => round(FaceVerifyLog::whereNotNull('durasi_ms')->avg('durasi_ms') ?? 0),
             ],
         ]);
     }
@@ -116,7 +121,7 @@ class FaceVerifyLogController extends Controller
 
         $response = new StreamedResponse(function () use ($rows) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['No', 'Nama', 'No Anggota', 'Aksi', 'Match', 'Confidence (%)', 'Threshold (%)', 'IP Address', 'Waktu']);
+            fputcsv($handle, ['No', 'Nama', 'No Anggota', 'Aksi', 'Match', 'Confidence (%)', 'Threshold (%)', 'Is Real', 'Spoof Score', 'Antispoof Label', 'Durasi (ms)', 'Keterangan', 'IP Address', 'Waktu']);
             foreach ($rows as $i => $row) {
                 fputcsv($handle, [
                     $i + 1,
@@ -126,6 +131,11 @@ class FaceVerifyLogController extends Controller
                     $row->match ? 'Match' : 'Gagal',
                     $row->confidence,
                     $row->threshold,
+                    $row->is_real ? 1 : 0,
+                    $row->spoof_score,
+                    $row->antispoof_label,
+                    $row->durasi_ms,
+                    $row->keterangan,
                     $row->ip_address,
                     $row->created_at,
                 ]);

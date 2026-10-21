@@ -56,11 +56,16 @@ class FaceRecognitionService
      */
     public function verify($pemilihId, string $imageBase64, string $aksi = 'verify_vote'): array
     {
+        // Waktu respons verifikasi (anti-spoof + embedding + jaringan ke Face API),
+        // dicatat untuk data penelitian. Tetap NULL bila Face API tidak merespons.
+        $durasiMs = null;
         try {
+            $mulai = microtime(true);
             $response = $this->client()->post("{$this->baseUrl}/api/face/verify", [
                 'pemilih_id'   => (string) $pemilihId,
                 'image_base64' => $imageBase64,
             ]);
+            $durasiMs = (int) round((microtime(true) - $mulai) * 1000);
             $result = $response->json() ?? ['success' => false, 'match' => false, 'message' => 'Respon tidak valid'];
         } catch (\Exception $e) {
             Log::error('[FaceAPI] verify error: ' . $e->getMessage());
@@ -78,6 +83,7 @@ class FaceRecognitionService
                 'is_real'         => $result['is_real'] ?? true,
                 'spoof_score'     => $result['spoof_score'] ?? 1.0,
                 'antispoof_label' => $result['antispoof_label'] ?? 'real',
+                'durasi_ms'       => $durasiMs,
                 'keterangan'      => $result['message'] ?? null,
                 'ip_address'      => request()->ip(),
             ]);

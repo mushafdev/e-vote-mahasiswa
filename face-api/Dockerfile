@@ -6,6 +6,10 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# PyTorch (CPU saja, ~200MB vs ~2GB versi CUDA) — wajib untuk anti-spoofing
+# DeepFace (Fasnet). Layer terpisah agar tidak diunduh ulang saat requirements berubah.
+RUN pip install --no-cache-dir torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

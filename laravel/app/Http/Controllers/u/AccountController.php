@@ -6,13 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Pemilih;
 use App\Models\Kandidat;
-use App\Mail\SendEmailBuktiBalon;
 use Formatter;
 use Illuminate\Support\Facades\DB;
 use Image;
 use File;
 use Exception;
-use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Services\FaceRecognitionService;
@@ -190,26 +188,19 @@ class AccountController extends Controller
             $faceResult  = $faceService->verify($pemilih->id, $request->face_image);
             if (empty($faceResult['match'])) {
                 $confidence = $faceResult['confidence'] ?? 0;
+                $message = !($faceResult['is_real'] ?? true)
+                    ? 'Terdeteksi foto/video, gunakan wajah asli di depan kamera.'
+                    : "Verifikasi wajah gagal (confidence: {$confidence}%). Pastikan wajah Anda terlihat jelas.";
                 return response()->json([
-                    'message' => "Verifikasi wajah gagal (confidence: {$confidence}%). Pastikan wajah Anda terlihat jelas.",
+                    'message' => $message,
                 ], 422);
             }
         }
 
         if(empty($pemilih->calon_kandidat_id)){
             try {
-
-                $balon=DB::table('calon_kandidats')->where('id',$id_kandidat)->first();
-                $metaEmail = [
-                    'judul' => 'Tanda Telah Memilih Balon Ketua IAI '.Formatter::identity()['title'],
-                    'nama' => $pemilih->nama,
-                    'no_anggota' => $pemilih->no_anggota,
-                    'waktu' => date('d/m/Y H:i:s'),
-                    'balon' => $balon->nama,
-                    'no_anggota_balon' => $balon->no_anggota,
-                ];
-                Mail::to($pemilih->email)->send(new SendEmailBuktiBalon($metaEmail));
-
+                // Email bukti memilih dinonaktifkan: pengiriman SMTP sinkron
+                // menahan request voting beberapa detik dan tidak diperlukan.
                 $pemilih->calon_kandidat_id = $id_kandidat;
                 $pemilih->save();
             }catch (Exception $e) {
@@ -245,19 +236,7 @@ class AccountController extends Controller
         $pemilih = Pemilih::find($id);
         if(empty($pemilih->calon_kandidat_2_id)){
             try {
-                
-                $balon=Kandidat::where('id',$id_kandidat)->first();
-                $metaEmail = [
-                    'judul' => 'Tanda Telah Memilih Balon Ketua IAI Tahap 2',
-                    'nama' => $pemilih->nama,
-                    'no_anggota' => $pemilih->no_anggota,
-                    'waktu' => date('d/m/Y H:i:s'),
-                    'no_urut_balon' => $balon->no_urut,
-                    'balon' => $balon->nama,
-                    'no_anggota_balon' => $balon->no_anggota,
-                ];
-                Mail::to($pemilih->email)->send(new SendEmailBuktiBalon($metaEmail));
-
+                // Email bukti memilih dinonaktifkan (lihat pilih_kandidat_update).
                 $pemilih->time_vote_2 = date('Y-m-d H:i:s');
                 $pemilih->calon_kandidat_2_id = $id_kandidat;
                 $pemilih->save();
@@ -293,7 +272,10 @@ class AccountController extends Controller
             $faceResult  = $faceService->verify($pemilih->id, $request->face_image);
             if (empty($faceResult['match'])) {
                 $confidence = $faceResult['confidence'] ?? 0;
-                return response()->json(['message' => "Verifikasi wajah gagal (confidence: {$confidence}%). Pastikan wajah Anda terlihat jelas."], 422);
+                $message = !($faceResult['is_real'] ?? true)
+                    ? 'Terdeteksi foto/video, gunakan wajah asli di depan kamera.'
+                    : "Verifikasi wajah gagal (confidence: {$confidence}%). Pastikan wajah Anda terlihat jelas.";
+                return response()->json(['message' => $message], 422);
             }
         }
 

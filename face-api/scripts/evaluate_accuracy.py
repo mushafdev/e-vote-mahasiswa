@@ -13,11 +13,14 @@ Menghasilkan (untuk mengisi Tabel 3, Gambar 7, dan pengganti Gambar 8 di artikel
   - roc_curve.png               → Gambar 7 (Kurva ROC)
   - similarity_distribution.png → pengganti Gambar 8 (distribusi genuine vs impostor)
   - threshold_sweep.csv         → FAR/FRR/akurasi per threshold (lampiran)
+  - detection_log.csv           → status deteksi MTCNN per foto (detection rate per pose,
+                                  Gambar 6 via buat_gambar.py pose)
 
 Struktur dataset yang diharapkan:
   dataset/
     subjek_01/
-      enroll/   f1.jpg f2.jpg f3.jpg f4.jpg f5.jpg   (5 foto: depan/kiri/kanan/menunduk/mendongak)
+      enroll/   depan.jpg kiri.jpg kanan.jpg menunduk.jpg mendongak.jpg
+                (nama file = nama pose; dipakai untuk detection rate per pose)
       test/     t1.jpg t2.jpg ... tN.jpg             (foto uji sesi berbeda, variasi kondisi)
     subjek_02/
       ...
@@ -95,6 +98,7 @@ def build_dataset(dataset_dir, deepface):
 
     templates = {}   # subjek -> template embedding (enroll)
     test_embs = {}   # subjek -> list embedding uji
+    det_log = []     # status deteksi per foto → detection_log.csv
     n_enroll_fail = n_test_fail = 0
 
     for subj in subjects:
@@ -106,6 +110,7 @@ def build_dataset(dataset_dir, deepface):
         embs = []
         for f in sorted(_list_images(enroll_dir)):
             e = get_embedding(f, deepface)
+            det_log.append(_det_row(subj, "enroll", f, e))
             if e is not None:
                 embs.append(e)
             else:
@@ -119,6 +124,7 @@ def build_dataset(dataset_dir, deepface):
         tembs = []
         for f in sorted(_list_images(test_dir)):
             e = get_embedding(f, deepface)
+            det_log.append(_det_row(subj, "test", f, e))
             if e is not None:
                 tembs.append(e)
             else:
@@ -126,7 +132,14 @@ def build_dataset(dataset_dir, deepface):
         test_embs[subj] = tembs
         print(f"  {subj}: {len(embs)} enroll, {len(tembs)} uji")
 
-    return templates, test_embs, n_enroll_fail, n_test_fail
+    return templates, test_embs, n_enroll_fail, n_test_fail, det_log
+
+
+def _det_row(subj, split, path, emb):
+    # Untuk foto enroll, nama file (tanpa ekstensi) = nama pose.
+    pose = os.path.splitext(os.path.basename(path))[0].lower() if split == "enroll" else ""
+    return {"subjek": subj, "split": split, "file": os.path.basename(path),
+            "pose": pose, "terdeteksi": int(emb is not None)}
 
 
 def _list_images(d):
@@ -253,7 +266,7 @@ def main():
     from deepface import DeepFace  # import di sini agar --help cepat
 
     print("\n[1/4] Ekstraksi embedding enroll & uji...")
-    templates, test_embs, ef, tf = build_dataset(args.dataset, DeepFace)
+    templates, test_embs, ef, tf, det_log = build_dataset(args.dataset, DeepFace)
     n_test = sum(len(v) for v in test_embs.values())
     print(f"\nSubjek valid: {len(templates)} | total foto uji: {n_test}"
           f" | gagal deteksi (enroll/uji): {ef}/{tf}")
@@ -273,7 +286,10 @@ def main():
                    "operating_threshold": args.threshold},
         "dataset": {"subjek": len(templates), "foto_uji": n_test,
                     "pasangan_genuine": len(genuine), "pasangan_impostor": len(impostor),
-                    "gagal_deteksi_enroll": ef, "gagal_deteksi_uji": tf},
+                    "gagal_deteksi_enroll": ef, "gagal_deteksi_uji": tf,
+                    "total_foto": len(det_log),
+                    "detection_rate_percent": round(
+                        100 * sum(r["terdeteksi"] for r in det_log) / len(det_log), 2)},
         "operating_point": op,
         "roc_auc": round(float(roc_auc), 4),
         "eer_percent": round(float(eer) * 100, 2),
@@ -288,6 +304,7 @@ def main():
         json.dump(summary, f, indent=2)
     _write_csv(os.path.join(args.out, "metrics.csv"), [op])
     _write_csv(os.path.join(args.out, "threshold_sweep.csv"), sweep)
+    _write_csv(os.path.join(args.out, "detection_log.csv"), det_log)
     plot_roc(fpr, tpr, roc_auc, eer, op["FAR"] / 100, op["recall"] / 100,
              os.path.join(args.out, "roc_curve.png"))
     plot_distribution(genuine, impostor, args.threshold,

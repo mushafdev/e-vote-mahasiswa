@@ -60,6 +60,12 @@
     </div>
 </div>
 
+<div class="text-muted small mb-3">
+    Rata-rata waktu verifikasi:
+    <strong>{{ $n_durasi > 0 ? number_format($rata_durasi_ms / 1000, 2) . ' detik' : '-' }}</strong>
+    (n = {{ $n_durasi }} verifikasi; diukur dari server Laravel ke Face API)
+</div>
+
 {{-- Grafik --}}
 <div class="row mb-3">
     <div class="col-md-6 mb-3">
@@ -124,12 +130,13 @@
                     <th class="text-center" width="80">Hasil</th>
                     <th width="160">Confidence</th>
                     <th class="text-center" width="80">Threshold</th>
+                    <th class="text-center" width="80">Durasi</th>
                     <th class="text-center" width="110">IP Address</th>
                     <th class="text-center" width="130">Waktu</th>
                 </tr>
             </thead>
             <tbody id="table-body">
-                <tr><td colspan="8" class="text-center text-muted">Klik Filter untuk memuat data</td></tr>
+                <tr><td colspan="9" class="text-center text-muted">Klik Filter untuk memuat data</td></tr>
             </tbody>
         </table>
     </div>
